@@ -17,9 +17,9 @@ public class MirageMaintenance {
     public static class Solution1 {
         public static void main(String[] args) {
             try (BufferedReader reader = ResourceUtils.resourceReader(MirageMaintenance.class, REPORT)) {
-                List<List<Integer>> sensorValues = readSensorValues(reader);
-                sensorValues.forEach(Solution1::extrapolateValueHistory);
-                int result = sensorValues.stream()
+                int result = reader.lines()
+                        .map(MirageMaintenance::lineToValueHistory)
+                        .map(Solution1::extrapolateValueHistory)
                         .mapToInt(history -> history.get(history.size() - 1))
                         .sum();
                 logger.log(Level.INFO, "Result = {0}", result);
@@ -28,15 +28,7 @@ public class MirageMaintenance {
             }
         }
 
-        private static List<List<Integer>> readSensorValues(BufferedReader reader) {
-            return reader.lines()
-                    .map(line -> Arrays.stream(line.trim().split("\s+"))
-                            .map(value -> Integer.parseInt(value.trim()))
-                            .collect(Collectors.toList()))
-                    .collect(Collectors.toList());
-        }
-
-        private static void extrapolateValueHistory(List<Integer> history) {
+        private static List<Integer> extrapolateValueHistory(List<Integer> history) {
             List<List<Integer>> extrapolationResults = new ArrayList<>();
             extrapolationResults.add(history);
 
@@ -60,6 +52,13 @@ public class MirageMaintenance {
                 int difference = sequence.get(sequence.size() - 1) + upperSequence.get(upperSequence.size() - 1);
                 upperSequence.add(difference);
             }
+            return history;
         }
+    }
+
+    private static List<Integer> lineToValueHistory(String line) {
+        return Arrays.stream(line.trim().split("\s+"))
+                .map(value -> Integer.parseInt(value.trim()))
+                .collect(Collectors.toList());
     }
 }
