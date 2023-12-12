@@ -3,6 +3,7 @@ package advent.day11;
 import advent.ResourceUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -42,34 +43,59 @@ public class CosmicExpansion {
                     if (visitedPairs.contains(pair) || galaxy1 == galaxy2) {
                         continue;
                     }
-                    sum += pair.path(emptySpace);
+                    sum += path(pair, emptySpace);
                     visitedPairs.add(pair);
                 }
             }
             return sum;
         }
 
-        private static Set<Galaxy> collectGalaxies(char[][] spaceImage) {
-            Set<Galaxy> galaxies = new HashSet<>();
-            for (int i = 0; i < spaceImage.length; i++) {
-                for (int j = 0; j < spaceImage[i].length; j++) {
-                    if (spaceImage[i][j] == '#') {
-                        galaxies.add(new Galaxy(i, j));
-                    }
-                }
+        public static int path(GalaxyPair galaxyPair, EmptySpace emptySpace) {
+            Galaxy galaxy1 = galaxyPair.galaxy1();
+            Galaxy galaxy2 = galaxyPair.galaxy2();
+            return Math.abs(galaxy1.x - galaxy2.x) + Math.abs(galaxy1.y - galaxy2.y) + emptySpace.spaceBetween(galaxy1, galaxy2);
+        }
+    }
+
+    public static class Solution2 {
+        public static void main(String[] args) {
+            try (BufferedReader reader = ResourceUtils.resourceReader(CosmicExpansion.class, IMAGE)) {
+                char[][] spaceImage = parseImage(reader.lines().collect(Collectors.toList()));
+                Set<Galaxy> galaxies = collectGalaxies(spaceImage);
+                BigInteger result = sumAllPaths(galaxies);
+                logger.log(Level.INFO, "Result = {0}", result);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, "Unable to read input file", ex);
             }
-            return galaxies;
         }
 
-        private static char[][] parseImage(List<String> lines) {
-            char[][] image = new char[lines.size()][lines.get(0).length()];
-            for (int i = 0; i < lines.size(); i++) {
-                String line = lines.get(i);
-                for (int j = 0; j < line.length(); j++) {
-                    image[i][j] = line.charAt(j);
+        private static BigInteger sumAllPaths(Set<Galaxy> galaxies) {
+            BigInteger sum = BigInteger.ZERO;
+            Set<GalaxyPair> visitedPairs = new HashSet<>();
+            EmptySpace emptySpace = new EmptySpace(galaxies);
+
+            for (Galaxy galaxy1: galaxies) {
+                for (Galaxy galaxy2: galaxies) {
+                    GalaxyPair pair = new GalaxyPair(galaxy1, galaxy2);
+                    if (visitedPairs.contains(pair) || galaxy1 == galaxy2) {
+                        continue;
+                    }
+                    sum = sum.add(path(pair, emptySpace));
+                    visitedPairs.add(pair);
                 }
             }
-            return image;
+            return sum;
+        }
+
+        public static BigInteger path(GalaxyPair galaxyPair, EmptySpace emptySpace) {
+            Galaxy galaxy1 = galaxyPair.galaxy1();
+            Galaxy galaxy2 = galaxyPair.galaxy2();
+            int horizontalPath = Math.abs(galaxy1.x - galaxy2.x);
+            int verticalPath = Math.abs(galaxy1.y - galaxy2.y);
+            BigInteger pathWithoutExpansion = BigInteger.valueOf(horizontalPath + verticalPath);
+            BigInteger expansionDelta = BigInteger.valueOf(emptySpace.spaceBetween(galaxy1, galaxy2))
+                    .multiply(BigInteger.valueOf(1_000_000 - 1));
+            return pathWithoutExpansion.add(expansionDelta);
         }
     }
 
@@ -83,6 +109,29 @@ public class CosmicExpansion {
         }
     }
 
+    private static Set<Galaxy> collectGalaxies(char[][] spaceImage) {
+        Set<Galaxy> galaxies = new HashSet<>();
+        for (int i = 0; i < spaceImage.length; i++) {
+            for (int j = 0; j < spaceImage[i].length; j++) {
+                if (spaceImage[i][j] == '#') {
+                    galaxies.add(new Galaxy(i, j));
+                }
+            }
+        }
+        return galaxies;
+    }
+
+    private static char[][] parseImage(List<String> lines) {
+        char[][] image = new char[lines.size()][lines.get(0).length()];
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            for (int j = 0; j < line.length(); j++) {
+                image[i][j] = line.charAt(j);
+            }
+        }
+        return image;
+    }
+
     public static record GalaxyPair(Galaxy galaxy1, Galaxy galaxy2) {
         public GalaxyPair(Galaxy galaxy1, Galaxy galaxy2) {
             if (galaxy1.compareTo(galaxy2) >= 0) {
@@ -92,10 +141,6 @@ public class CosmicExpansion {
                 this.galaxy1 = galaxy2;
                 this.galaxy2 = galaxy1;
             }
-        }
-
-        public int path(EmptySpace emptySpace) {
-            return Math.abs(galaxy1.x - galaxy2.x) + Math.abs(galaxy1.y - galaxy2.y) + emptySpace.spaceBetween(galaxy1, galaxy2);
         }
     }
 
