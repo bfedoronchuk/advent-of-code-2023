@@ -4,10 +4,8 @@ import advent.ResourceUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -21,11 +19,9 @@ public class PipeMaze {
             try (BufferedReader reader = ResourceUtils.resourceReader(PipeMaze.class, BLUEPRINT)) {
                 Node[][] blueprint = parseBlueprint(reader.lines().collect(Collectors.toList()));
                 NodePoint startPoint = findStart(blueprint);
-                int maxPath = getNeighbours(startPoint, blueprint).stream()
-                        .findFirst() // we expect that there are only two outgoing nodes from the start node forming a cycle
-                        .map(neighbour -> maxPath(neighbour, startPoint, blueprint, new HashSet<>(Set.of(startPoint))))
-                        .orElseThrow(() -> new IllegalStateException("There is no cycle"));
-                int result = (int) Math.ceil(maxPath * 1.0 / 2);
+
+                int path = cyclePath(startPoint, blueprint);
+                int result = (int) Math.ceil(path * 1.0 / 2);
                 logger.log(Level.INFO, "Result = {0}", result);
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, "Unable to read input file", ex);
@@ -97,33 +93,31 @@ public class PipeMaze {
             return true;
         }
 
-        private static int maxPath(NodePoint start, NodePoint end, Node[][] blueprint, Set<NodePoint> visited) {
-            visited.add(start);
+        private static int cyclePath(NodePoint startingPoint, Node[][] blueprint) {
+            NodePoint lastVisited = startingPoint;
+            NodePoint current = getNeighbours(startingPoint, blueprint)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Starting point should have at least 2 ingoing pipes forming a cycle"));
+            int path = 1;
 
-            List<NodePoint> neighbours = getNeighbours(start, blueprint);
-            boolean beginningOfTraversal = visited.size() == 2;
-            if (neighbours.contains(end) && !beginningOfTraversal) {
-                return 1;
-            }
-            List<NodePoint> unvisitedNeighbours =  getNeighbours(start, blueprint).stream()
-                    .filter(neighbour -> !visited.contains(neighbour))
-                    .collect(Collectors.toList());
-
-            boolean deadEnd = unvisitedNeighbours.isEmpty();
-            if (deadEnd) {
-                return -1;
-            }
-
-            int maxPath = -1;
-            for (NodePoint neighbour: unvisitedNeighbours) {
-                int maxNeighbourPath = maxPath(neighbour, end, blueprint, visited);
-                maxPath = Math.max(maxPath, maxNeighbourPath);
+            while (!current.equals(startingPoint)) {
+                path++;
+                Optional<NodePoint> nextPipe = Optional.empty();
+                for (NodePoint neighborPipe : getNeighbours(current, blueprint)) {
+                    if (!neighborPipe.equals(lastVisited)) {
+                        nextPipe = Optional.of(neighborPipe);
+                        break;
+                    }
+                }
+                if (nextPipe.isEmpty()) {
+                    throw new IllegalStateException("No path further at point " + current);
+                }
+                lastVisited = current;
+                current = nextPipe.get();
             }
 
-            if (maxPath != -1) {
-                maxPath++;
-            }
-            return maxPath;
+            return path;
         }
     }
 
