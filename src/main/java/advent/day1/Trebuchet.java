@@ -13,12 +13,13 @@ import java.util.stream.Collectors;
 
 public class Trebuchet {
     private static final Logger logger = Logger.getLogger(Trebuchet.class.getName());
-    private static final String CALIBRATION_VALUES = "day1/calibration-values.txt";
+    private static final String CALIBRATION_VALUES_1 = "day1/calibration-values-1.txt";
+    private static final String CALIBRATION_VALUES_2 = "day1/calibration-values-2.txt";
 
 
     public static class Solution1 {
         public static void main(String[] args) {
-            try (BufferedReader reader = ResourceUtils.resourceReader(Trebuchet.class, CALIBRATION_VALUES)) {
+            try (BufferedReader reader = ResourceUtils.resourceReader(Trebuchet.class, CALIBRATION_VALUES_1)) {
                 Integer result = reader.lines()
                         .mapToInt(Solution1::calibrationValue)
                         .sum();
@@ -54,7 +55,7 @@ public class Trebuchet {
         );
 
         public static void main(String[] args) {
-            try (BufferedReader reader = ResourceUtils.resourceReader(Trebuchet.class, CALIBRATION_VALUES)) {
+            try (BufferedReader reader = ResourceUtils.resourceReader(Trebuchet.class, CALIBRATION_VALUES_2)) {
                 Integer result = reader.lines()
                         .mapToInt(Solution2::calibrationValue)
                         .sum();

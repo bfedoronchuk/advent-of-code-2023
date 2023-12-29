@@ -17,11 +17,12 @@ import java.util.stream.Collectors;
 
 public class HauntedWasteland {
     private static final Logger logger = Logger.getLogger(HauntedWasteland.class.getName());
-    private static final String MAP = "day8/map.txt";
+    private static final String MAP_1 = "day8/map-1.txt";
+    private static final String MAP_2 = "day8/map-2.txt";
 
     public static class Solution1 {
         public static void main(String[] args) {
-            try (BufferedReader reader = ResourceUtils.resourceReader(HauntedWasteland.class, MAP)) {
+            try (BufferedReader reader = ResourceUtils.resourceReader(HauntedWasteland.class, MAP_1)) {
                 List<String> lines = reader.lines().toList();
                 List<Direction> directions = readDirections(lines.get(0));
                 Map<String, SimpleEntry<String, String>> navigations = readNavigations(lines);
@@ -54,7 +55,7 @@ public class HauntedWasteland {
 
     public static class Solution2 {
         public static void main(String[] args) {
-            try (BufferedReader reader = ResourceUtils.resourceReader(HauntedWasteland.class, MAP)) {
+            try (BufferedReader reader = ResourceUtils.resourceReader(HauntedWasteland.class, MAP_2)) {
                 List<String> lines = reader.lines().toList();
                 List<Direction> directions = readDirections(lines.get(0));
                 Map<String, SimpleEntry<String, String>> navigations = readNavigations(lines);
